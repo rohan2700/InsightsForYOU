@@ -86,7 +86,22 @@ def format_extracted_info(action, data_fields, conditions):
     
     return f"{action_text}\n{data_fields_text}\n{conditions_text}"
 
-# Test with a sample prompt
-prompt = "Compare sales between 2022 and 2023"
-extracted_info = extract_information(prompt)
-print(extracted_info)
+
+def main():
+    print("Welcome to the Dataset Analyzer!")
+    print("Type your prompt (e.g., 'Compare sales between 2022 and 2023'):")
+    
+    while True:
+        prompt = input("\nYour prompt: ")
+        
+        if prompt.lower() in ["exit", "quit"]:
+            print("Goodbye!")
+            break
+        
+        response = extract_information(prompt)
+        print(f"\n{response}")
+
+
+# Run the program
+if __name__ == "__main__":
+    main()
