@@ -1,0 +1,92 @@
+import spacy
+
+# Load spaCy English model
+nlp = spacy.load("en_core_web_sm")
+
+def extract_information(prompt):
+    # Process the prompt
+    doc = nlp(prompt)
+    
+    action = None
+    data_fields = []
+    conditions = []
+
+    # Loop through the tokens in the prompt
+    for token in doc:
+        if token.pos_ == "VERB":
+            action = token.lemma_  # Lemmatize to get base verb (e.g., compare, summarize)
+        elif token.dep_ == "dobj" or token.dep_ == "nsubj":
+            data_fields.append(token.text)  # Extract objects (e.g., sales, revenue)
+    
+    # Optional: Parse conditions from the prompt (like between, top, etc.)
+    for ent in doc.ents:
+        conditions.append((ent.label_, ent.text))
+
+    # Check for errors or missing components
+    errors = check_for_errors(action, data_fields, conditions)
+    
+    # If there are errors, return a plain text error message with clarifications
+    if errors:
+        return format_error_message(errors)
+    
+    # If no errors, return a plain text summary of extracted information
+    return format_extracted_info(action, data_fields, conditions)
+
+
+def check_for_errors(action, data_fields, conditions):
+    """Check if the prompt is missing key information and generate error messages."""
+    error_messages = []
+
+    # Check if action (verb) is missing
+    if not action:
+        error_messages.append("The prompt doesn't specify an action.")
+    
+    # Check if data fields are missing
+    if not data_fields:
+        error_messages.append("No data fields found.")
+    
+    # Check if conditions might be necessary
+    if action == "compare" and len(conditions) < 2:
+        error_messages.append("Comparison requires at least two conditions.")
+
+    return error_messages
+
+
+def format_error_message(errors):
+    """Convert errors and clarifications into a plain text message."""
+    clarifications = suggest_clarifications(errors)
+    error_text = "\n".join(errors)
+    clarification_text = "\n".join(clarifications)
+    
+    return f"Errors detected:\n{error_text}\n\nSuggestions to fix:\n{clarification_text}"
+
+
+def suggest_clarifications(errors):
+    """Provide suggestions to clarify the prompt based on the errors detected."""
+    clarifications = []
+
+    for error in errors:
+        if "action" in error:
+            clarifications.append("What would you like to do? You can try actions like 'compare', 'summarize', or 'find'.")
+        
+        if "data fields" in error:
+            clarifications.append("Please specify what you want to analyze. For example, 'sales', 'revenue', or 'regions'.")
+        
+        if "Comparison" in error:
+            clarifications.append("For comparison, please provide two conditions. For example, 'Compare sales between 2022 and 2023'.")
+
+    return clarifications
+
+
+def format_extracted_info(action, data_fields, conditions):
+    """Convert extracted information into a plain text message."""
+    action_text = f"Action: {action.capitalize()}" if action else "No action detected."
+    data_fields_text = f"Data fields: {', '.join(data_fields)}" if data_fields else "No data fields detected."
+    conditions_text = f"Conditions: {', '.join([c[1] for c in conditions])}" if conditions else "No conditions detected."
+    
+    return f"{action_text}\n{data_fields_text}\n{conditions_text}"
+
+# Test with a sample prompt
+prompt = "Compare sales between 2022 and 2023"
+extracted_info = extract_information(prompt)
+print(extracted_info)
