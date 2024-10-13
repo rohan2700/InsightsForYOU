@@ -94,8 +94,6 @@ Folder Structure-
 
 │   └── index.html               # HTML template for the user interface
 
-├── static                       # Static files (CSS, JS, etc.)
-
 ├── requirements.txt             # List of required Python packages
 
 └── README.md                    # Project documentation
