@@ -1,7 +1,11 @@
 # InsightsForYOU
 You give us the Datasets, and we give you your Insights
 
+.
+
 A web application built with Flask that allows users to upload datasets (CSV or Excel) and analyze them based on a user-provided prompt. The app extracts key actions and fields from the prompt to perform data analysis like summarizing, comparing, and finding specific data insights.
+
+.
 
 Features-
 
@@ -17,6 +21,7 @@ Find Conditions: Extracts and filters data based on conditions (e.g., "find reco
 
 Graphical Visualizations: Generates basic bar, line, and scatter plots using Matplotlib.
 
+.
 
 How It Works-
 
@@ -30,6 +35,7 @@ Data Analysis: Based on the extracted keywords and fields, the application perfo
 
 Visualization: For numerical fields, the app generates basic visualizations to provide graphical insights.
 
+.
 
 Usage-
 
@@ -44,6 +50,8 @@ Step 3: Click "Analyze" to get the results, which include:
 A summary or comparison table
 Basic visualizations (bar/line/scatter plots)
 
+.
+
 Example Prompts-
 
 Summarize Action: Summarize
@@ -52,15 +60,17 @@ Compare Action: Compare profit expenses
 
 Find Action: Find data between 2020 and 2022
 
+.
 
-Supported File Formats
+Supported File Formats-
 
 CSV (.csv): Comma-separated value files.
 
 Excel (.xlsx): Excel spreadsheet files.
 
+.
 
-Technologies Used
+Technologies Used-
 
 Flask: Web framework for Python.
 
@@ -72,8 +82,9 @@ Matplotlib/Seaborn: For basic data visualizations (bar charts, line graphs, scat
 
 HTML/CSS: Frontend for displaying results.
 
+.
 
-Folder Structure
+Folder Structure-
 
 .
 
@@ -83,16 +94,15 @@ Folder Structure
 
 │   └── index.html               # HTML template for the user interface
 
-├── uploads                      # Folder where uploaded files are stored
-
 ├── static                       # Static files (CSS, JS, etc.)
 
 ├── requirements.txt             # List of required Python packages
 
 └── README.md                    # Project documentation
 
+.
 
-Future Improvements
+Future Improvements-
 
 Add support for more file types (e.g., JSON).
 
@@ -104,12 +114,14 @@ Real-time progress feedback using WebSockets.
 
 Expand NLP capabilities for more complex prompts.
 
+.
 
-Contributing
+Contributing-
 
 Contributions are welcome! If you encounter bugs or have suggestions for improvements, please open an issue or submit a pull request.
 
+.
 
-License
+License-
 
 This project is licensed under the MIT License.
