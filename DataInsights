@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request
 import spacy
 import pandas as pd
 import os
@@ -6,118 +6,83 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import io
 import base64
+import re
 
 # Initialize Flask app
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = './uploads'
 
-# Load spaCy model
+# Load spaCy model for prompt parsing
 nlp = spacy.load("en_core_web_sm")
 
-# Ensure upload folder exists
+# Ensure the upload folder exists
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 
-import re
-
 def extract_information(prompt):
-    # Define supported actions
     actions = ['compare', 'summarize', 'find']
     action = None
-
-    # Look for action in prompt
     for act in actions:
         if re.search(r'\b' + act + r'\b', prompt, re.IGNORECASE):
             action = act
             break
-
-    # Ensure action is found
     if not action:
         return "Error: No valid action (compare, summarize, find) found in the prompt.", [], []
-
+    
     # Extract potential data fields by removing the action word
     prompt_without_action = re.sub(r'\b' + action + r'\b', '', prompt, flags=re.IGNORECASE)
-    
-    # Extract fields (simplified)
     data_fields = re.findall(r'\b[a-zA-Z0-9_]+\b', prompt_without_action)
     
-    # Optionally, extract conditions like 'between 2022 and 2023'
+    # Extract conditions such as 'between 2022 and 2023'
     conditions = re.findall(r'between\s\d{4}\s+and\s+\d{4}', prompt, re.IGNORECASE)
-
     return action, data_fields, conditions
 
-# Function to generate graph and return it as a base64-encoded image
 def generate_graph(df, data_fields, graph_type="bar"):
     plt.figure(figsize=(8, 6))
-    
     if graph_type == "bar":
         df[data_fields].plot(kind="bar")
     elif graph_type == "line":
         df[data_fields].plot(kind="line")
     elif graph_type == "scatter":
         sns.pairplot(df[data_fields])
-    
-    # Save the plot to a buffer
+
     buf = io.BytesIO()
     plt.savefig(buf, format="png")
     buf.seek(0)
     plt.close()
 
-    # Convert the buffer to a base64 string
     encoded_img = base64.b64encode(buf.read()).decode('utf-8')
     img_tag = f'<img src="data:image/png;base64,{encoded_img}" />'
-    
     return img_tag
 
-# Analyze data function with graphs
 def analyze_data(action, data_fields, conditions, df):
-    print(f"Action: {action}")
-    print(f"Data Fields: {data_fields}")
-    print(f"Conditions: {conditions}")
-
     if action == 'summarize':
-        # Summarize the entire dataset (all columns)
         summary = df.describe(include='all')
-        
-        # Generate a bar plot for numerical data
         graph = generate_graph(df, df.select_dtypes(include='number').columns, graph_type="bar")
-
         return summary.to_html() + "<br>" + graph
 
     elif action == 'compare':
-        # Ensure at least two data fields are provided for comparison
         if len(data_fields) < 2:
             return "<p>Error: Please provide at least two fields to compare.</p>"
         
-        # Check that the fields exist in the dataset
         missing_fields = [field for field in data_fields if field not in df.columns]
         if missing_fields:
             return f"<p>Error: The following fields are missing in the dataset: {', '.join(missing_fields)}</p>"
         
-        # Full comparison of selected fields
         comparison = df[data_fields].describe(include='all')
-        
-        # Generate a comparison plot (line graph for time-series data)
         graph = generate_graph(df, data_fields, graph_type="line")
-
         return comparison.to_html() + "<br>" + graph
 
     elif action == 'find':
-        # Implement logic for "find" action
         if len(conditions) == 0:
             return "<p>Error: No conditions found to apply.</p>"
         
-        # Example: finding rows between two years
         start_year, end_year = map(int, re.findall(r'\d{4}', conditions[0]))
         filtered_df = df[(df['year'] >= start_year) & (df['year'] <= end_year)]
-        
-        # Generate a scatter plot for the filtered data
         graph = generate_graph(filtered_df, df.select_dtypes(include='number').columns, graph_type="scatter")
-
         return filtered_df.to_html() + "<br>" + graph
 
     return "<p>Error: Unsupported action.</p>"
-
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -136,16 +101,10 @@ def index():
             else:
                 return "<p>Unsupported file format. Please upload a .csv or .xlsx file.</p>"
 
-            # Extract the action, data fields, and conditions from the prompt
             action, data_fields, conditions = extract_information(prompt)
-
-            # Analyze the dataset based on the prompt
             result = analyze_data(action, data_fields, conditions, df)
-            
-            # Only return the result itself, no headers or surrounding HTML
             return result
 
-    # If GET request, render the full template as normal
     return render_template('index.html')
 
 if __name__ == '__main__':
